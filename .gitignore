@@ -57,35 +57,3 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
-
-# System directories (Windows)
-AppData/
-OneDrive/
-Pictures/
-Videos/
-Downloads/
-Contacts/
-Links/
-Music/
-Saved Games/
-Searches/
-IntelGraphicsProfiles/
-Creative Cloud Files*/
-
-# Personal files
-.cursor/
-.ssh/
-.gitconfig
-.node_repl_history
-.lesshst
-.ipython/
-.jupyter/
-
-# Assignment directories
-assignment*/
-assigment*/
-
-# Other system files
-NTUSER.DAT*
-ntuser.dat*
-desktop.ini
