@@ -1,0 +1,42 @@
+# GAIA Green Agent Configuration
+# Configuration for running GAIA benchmark tasks on AgentBeats
+
+# Agent configuration
+agent:
+  seed: 42  # Random seed for deterministic behavior
+  max_retries: 3  # Maximum retry attempts for failed steps
+  calculator_precision: 50  # Decimal precision for calculator
+
+# Data configuration
+data:
+  # Data source - can be:
+  # - File path (for json/jsonl/parquet)
+  # - Hugging Face dataset identifier (for huggingface format)
+  # Example with sample data: "data/sample_gaia_tasks.json"
+  source: "data/sample_gaia_tasks.json"
+  
+  # Data format: json, jsonl, parquet, or huggingface
+  format: "json"
+  
+  # Split to use (for Hugging Face datasets)
+  split: "validation"
+  
+  # Filter options
+  filter_math_only: true  # Only process math-related tasks
+  level: null  # Filter by level (1, 2, or 3), null for all levels
+
+# Evaluation configuration
+evaluation:
+  # Output directory for results
+  output_dir: "results"
+  
+  # Save individual task results
+  save_individual_results: true
+  
+  # Save execution logs
+  save_logs: true
+
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: null  # Log file path (null for stdout only)

@@ -1,0 +1,74 @@
+[
+  {
+    "task_id": "sample_001",
+    "Question": "What is 15 multiplied by 7?",
+    "Level": "1",
+    "Final answer": "105",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  },
+  {
+    "task_id": "sample_002",
+    "Question": "Calculate 42 divided by 6.",
+    "Level": "1",
+    "Final answer": "7",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  },
+  {
+    "task_id": "sample_003",
+    "Question": "What is the sum of 25 and 17?",
+    "Level": "1",
+    "Final answer": "42",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  },
+  {
+    "task_id": "sample_004",
+    "Question": "Calculate 100 minus 37.",
+    "Level": "1",
+    "Final answer": "63",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  },
+  {
+    "task_id": "sample_005",
+    "Question": "What is 8 times 9?",
+    "Level": "1",
+    "Final answer": "72",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  },
+  {
+    "task_id": "sample_006",
+    "Question": "Calculate 20 divided by 4, then subtract 3.",
+    "Level": "1",
+    "Final answer": "2",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  },
+  {
+    "task_id": "sample_007",
+    "Question": "What is 10 plus 5, then multiply by 2?",
+    "Level": "1",
+    "Final answer": "30",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  },
+  {
+    "task_id": "sample_008",
+    "Question": "First calculate 12 multiplied by 3, then add 14.",
+    "Level": "1",
+    "Final answer": "50",
+    "file_name": "",
+    "file_path": "",
+    "Annotator Metadata": {}
+  }
+]

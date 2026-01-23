@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  green-agent:
+    build: .
+    image: gaia-green-agent:latest
+    container_name: gaia-green-agent
+    volumes:
+      - ./results:/app/results
+      - ./data:/app/data:ro
+      - ./configs:/app/configs:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python eval/run_agentbeats.py --config configs/gaia_agent.yaml
+    restart: unless-stopped
+
+  purple-agent:
+    build: .
+    image: gaia-green-agent:latest
+    container_name: gaia-purple-agent
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python -m purple_agent.server
+    restart: unless-stopped
