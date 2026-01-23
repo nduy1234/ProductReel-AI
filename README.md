@@ -484,23 +484,9 @@ This project includes:
 3. **Docker Image**: Containerized deployment (see `Dockerfile`)
 4. **Documentation**: Comprehensive guides (see `ABSTRACT.md`)
 
-## Citation
-
-If you use GAIA benchmark, please cite:
-
-```bibtex
-@article{gaia2023,
-  title={GAIA: a benchmark for General AI Assistants},
-  author={Mialon, Grégoire and others},
-  journal={arXiv preprint arXiv:2311.12983},
-  year={2023}
-}
-```
 
 ## Resources
 
-- **GAIA Benchmark**: https://huggingface.co/datasets/gaia-benchmark/GAIA
+- **GAIA Benchmark**: https://arxiv.org/abs/2311.12983
 - **GAIA Leaderboard**: https://huggingface.co/spaces/gaia-benchmark/leaderboard
-- **AgentBeats Platform**: https://agentbeats.org
-- **A2A Protocol**: https://github.com/agentbeats/a2a-sdk
-
+- **AgentX–AgentBeats**: https://rdi.berkeley.edu/agentx-agentbeats.html
