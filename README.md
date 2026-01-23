@@ -83,6 +83,155 @@ python eval/run_agentbeats.py \
 python example_usage.py
 ```
 
+## Running the Green Agent
+
+The Green Agent can be run in several ways depending on your needs. The main entry point is `eval/run_agentbeats.py`.
+
+### Basic Command
+
+The simplest way to run the Green Agent:
+
+```bash
+python eval/run_agentbeats.py --config configs/gaia_agent.yaml
+```
+
+This will:
+- Load tasks from the data source specified in the config file
+- Execute each task using the Plan → Act → Verify → Answer loop
+- Save results to the `results/` directory
+- Generate a summary of all evaluations
+
+### Command-Line Options
+
+The Green Agent supports several command-line arguments:
+
+| Option | Description | Example |
+|--------|-------------|---------|
+| `--config` | Path to YAML configuration file (required) | `--config configs/gaia_agent.yaml` |
+| `--data-source` | Override data source from config | `--data-source data/sample_gaia_tasks.json` |
+| `--data-format` | Data format: `json`, `jsonl`, `parquet`, or `huggingface` | `--data-format json` |
+| `--task-id` | Run a single specific task | `--task-id "task_123"` |
+| `--max-tasks` | Limit number of tasks to process | `--max-tasks 10` |
+| `--output-dir` | Custom output directory for results | `--output-dir "my_results"` |
+
+### Common Use Cases
+
+#### 1. Test with Sample Data
+
+Run the agent on the included sample tasks:
+
+```bash
+python eval/run_agentbeats.py \
+  --config configs/gaia_agent.yaml \
+  --data-source data/sample_gaia_tasks.json \
+  --data-format json \
+  --max-tasks 5
+```
+
+#### 2. Run a Single Task
+
+Execute one specific task by ID:
+
+```bash
+python eval/run_agentbeats.py \
+  --config configs/gaia_agent.yaml \
+  --task-id "task_1"
+```
+
+#### 3. Batch Evaluation
+
+Process multiple tasks from a local file:
+
+```bash
+python eval/run_agentbeats.py \
+  --config configs/gaia_agent.yaml \
+  --data-source path/to/gaia_tasks.json \
+  --data-format json \
+  --max-tasks 100
+```
+
+#### 4. Use Hugging Face Dataset
+
+Load tasks from a Hugging Face dataset:
+
+```bash
+python eval/run_agentbeats.py \
+  --config configs/gaia_agent.yaml \
+  --data-source "gaia-benchmark/GAIA" \
+  --data-format huggingface
+```
+
+#### 5. Custom Output Location
+
+Save results to a specific directory:
+
+```bash
+python eval/run_agentbeats.py \
+  --config configs/gaia_agent.yaml \
+  --output-dir "experiments/run_001"
+```
+
+### What Happens When You Run the Agent
+
+1. **Initialization**: The agent loads configuration, initializes tools (calculator), and sets up logging
+2. **Task Loading**: Tasks are loaded from the specified data source
+3. **Execution Loop**: For each task:
+   - **Planning**: Problem is decomposed into steps
+   - **Action**: Tools are invoked to perform computations
+   - **Verification**: Results are checked at each step
+   - **Answer**: Final answer is generated and verified
+4. **Results**: Individual task results and summary are saved to JSON files
+
+### Output Files
+
+After running, you'll find:
+
+- **Individual Results**: `results/{task_id}.json` - Detailed execution log for each task
+- **Summary**: `results/summary.json` - Overall statistics (accuracy, counts, etc.)
+- **Logs**: Console output shows progress and execution details
+
+### Example Output
+
+When running, you'll see output like:
+
+```
+Loading tasks from data/sample_gaia_tasks.json...
+Loaded 5 tasks
+Running task: task_1
+  Planning: Identified 1 step(s)
+  Action: Executing step 1...
+  Verification: Step 1 passed
+  Answer: 42
+  Result: ✓ Correct
+...
+Summary: 4/5 tasks correct (80.0% accuracy)
+Results saved to results/
+```
+
+### Running in Python Code
+
+You can also run the Green Agent programmatically:
+
+```python
+from agent import GAIAAgent
+from tasks import GAIALoader
+from tools import Calculator
+
+# Initialize agent
+calculator = Calculator(precision=50)
+agent = GAIAAgent(calculator=calculator, seed=42)
+
+# Load a task
+loader = GAIALoader()
+task = loader.get_task("task_1", source="data/sample_gaia_tasks.json", format="json")
+
+# Execute
+result = agent.execute(task.prompt)
+print(f"Answer: {result['answer']}")
+```
+
+See `example_usage.py` for a complete example.
+
 ## Usage
 
 ### Basic Usage
@@ -287,10 +436,71 @@ The calculator uses Python's `eval()` which can be restrictive. For complex expr
 
 ## License
 
-This project is provided as-is for research and evaluation purposes.
+This implementation follows AgentBeats licensing. GAIA dataset has its own license terms.
+
+## Docker Deployment
+
+### Build Docker Image
+
+```bash
+# Linux/Mac
+./build_docker.sh
+
+# Windows
+build_docker.bat
+
+# Or manually
+docker build -t gaia-green-agent:latest .
+```
+
+### Run Green Agent
+
+```bash
+docker run -v $(pwd)/results:/app/results gaia-green-agent:latest
+```
+
+### Run Purple Agent Server
+
+```bash
+docker run -p 8000:8000 gaia-green-agent:latest python -m purple_agent.server
+```
+
+### Using Docker Compose
+
+```bash
+docker-compose up
+```
+
+This starts both:
+- Green Agent (evaluation runner)
+- Purple Agent (A2A endpoint on port 8000)
+
+## Submission Components
+
+This project includes:
+
+1. **Green Agent**: Complete implementation (`agent/`, `tools/`, `tasks/`, `eval/`)
+2. **Baseline Purple Agent**: A2A-compatible participant agent (`purple_agent/`)
+3. **Docker Image**: Containerized deployment (see `Dockerfile`)
+4. **Documentation**: Comprehensive guides (see `ABSTRACT.md`)
 
 ## Citation
 
-If you use this code, please cite:
-- GAIA Benchmark: [arXiv:2311.12983](https://arxiv.org/abs/2311.12983)
-- AgentBeats: [docs.agentbeats.org](https://docs.agentbeats.org/)
+If you use GAIA benchmark, please cite:
+
+```bibtex
+@article{gaia2023,
+  title={GAIA: a benchmark for General AI Assistants},
+  author={Mialon, Grégoire and others},
+  journal={arXiv preprint arXiv:2311.12983},
+  year={2023}
+}
+```
+
+## Resources
+
+- **GAIA Benchmark**: https://huggingface.co/datasets/gaia-benchmark/GAIA
+- **GAIA Leaderboard**: https://huggingface.co/spaces/gaia-benchmark/leaderboard
+- **AgentBeats Platform**: https://agentbeats.org
+- **A2A Protocol**: https://github.com/agentbeats/a2a-sdk
+
