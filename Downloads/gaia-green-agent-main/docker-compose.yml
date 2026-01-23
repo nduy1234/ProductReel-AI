@@ -1,0 +1,73 @@
+version: '3.8'
+
+# Docker Compose configuration for GAIA Green Agent
+# This file defines services for both the Green Agent (evaluator) and Purple Agent (participant)
+
+services:
+  green-agent:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: gaia-green-agent:latest
+    container_name: gaia-green-agent
+    volumes:
+      # Mount results directory for output
+      - ./results:/app/results
+      # Mount data directory as read-only
+      - ./data:/app/data:ro
+      # Mount configs directory as read-only
+      - ./configs:/app/configs:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+    # Resource limits (adjust based on your system)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+    command: python eval/run_agentbeats.py --config configs/gaia_agent.yaml
+    restart: unless-stopped
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  purple-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gaia-green-agent:latest
+    container_name: gaia-purple-agent
+    ports:
+      # Expose A2A endpoint on port 8000
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+    # Resource limits for purple agent (typically lighter workload)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    command: python -m purple_agent.server
+    restart: unless-stopped
+    # Health check endpoint
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
