@@ -450,20 +450,20 @@ This implementation follows AgentBeats licensing. GAIA dataset has its own licen
 build_docker.bat
 
 # Or manually
-docker build -t gaia-green-agent:latest .                    # Green agent
+docker build -t gaia-green-agents:latest .                    # Green agent
 docker build -f Dockerfile.purple -t gaia-purple-agent:latest .  # Purple agent
 ```
 
 ### Run Green Agent
 
 ```bash
-docker run -v $(pwd)/results:/app/results gaia-green-agent:latest
+docker run -v $(pwd)/results:/app/results gaia-green-agents:latest
 ```
 
 ### Run Purple Agent Server
 
 ```bash
-docker run -p 8000:8000 gaia-green-agent:latest python -m purple_agent.server
+docker run -p 8000:8000 gaia-purple-agent:latest
 ```
 
 ### Using Docker Compose

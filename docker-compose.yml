@@ -3,7 +3,7 @@ version: '3.8'
 services:
   green-agent:
     build: .
-    image: gaia-green-agent:latest
+    image: gaia-green-agents:latest
     container_name: gaia-green-agent
     volumes:
       - ./results:/app/results
@@ -15,8 +15,10 @@ services:
     restart: unless-stopped
 
   purple-agent:
-    build: .
-    image: gaia-green-agent:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.purple
+    image: gaia-purple-agent:latest
     container_name: gaia-purple-agent
     ports:
       - "8000:8000"

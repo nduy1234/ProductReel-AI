@@ -77,9 +77,9 @@ def run_server(port: int = 8000, use_green_agent: bool = True):
     agent = PurpleAgent(use_green_agent=use_green_agent)
     handler_class = create_handler_class(agent)
     
-    server = HTTPServer(('localhost', port), handler_class)
-    logging.info(f"Purple Agent server running on http://localhost:{port}")
-    logging.info(f"A2A endpoint: http://localhost:{port}/a2a/task")
+    server = HTTPServer(('0.0.0.0', port), handler_class)
+    logging.info(f"Purple Agent server running on http://0.0.0.0:{port}")
+    logging.info(f"A2A endpoint: http://0.0.0.0:{port}/a2a/task")
     
     try:
         server.serve_forever()
