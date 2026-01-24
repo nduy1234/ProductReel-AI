@@ -1,0 +1,38 @@
+# GAIA Purple Agent Docker Image
+FROM python:3.9-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project files
+COPY agent/ ./agent/
+COPY tools/ ./tools/
+COPY tasks/ ./tasks/
+COPY eval/ ./eval/
+COPY configs/ ./configs/
+COPY data/ ./data/
+COPY purple_agent/ ./purple_agent/
+COPY *.py ./
+COPY *.md ./
+COPY *.txt ./
+COPY *.yaml ./
+
+# Create results directory
+RUN mkdir -p results
+
+# Set Python path
+ENV PYTHONPATH=/app
+
+# Default command: run purple agent server
+CMD ["python", "-m", "purple_agent.server"]
