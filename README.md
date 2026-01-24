@@ -450,7 +450,8 @@ This implementation follows AgentBeats licensing. GAIA dataset has its own licen
 build_docker.bat
 
 # Or manually
-docker build -t gaia-green-agent:latest .
+docker build -t gaia-green-agent:latest .                    # Green agent
+docker build -f Dockerfile.purple -t gaia-purple-agent:latest .  # Purple agent
 ```
 
 ### Run Green Agent
@@ -474,6 +475,26 @@ docker-compose up
 This starts both:
 - Green Agent (evaluation runner)
 - Purple Agent (A2A endpoint on port 8000)
+
+### Publishing to GHCR (GitHub Container Registry)
+
+A GitHub Actions workflow (`.github/workflows/docker-publish.yml`) builds and pushes both images on push to `main`:
+
+| Agent | Image |
+|-------|--------|
+| Green | `ghcr.io/<owner>/gaia-green-agents:latest` |
+| Purple | `ghcr.io/<owner>/gaia-purple-agent:latest` |
+
+Replace `<owner>` with your GitHub username or org (e.g. `nduy1234`).
+
+**If you see "Image not found" or access errors:**
+
+1. Push to `main` so the workflow runs and publishes the images.
+2. Open [GitHub → Your profile → Packages](https://github.com/users/nduy1234/packages) (or your username).
+3. Find `gaia-purple-agent` (or `gaia-green-agents`).
+4. **Package settings** → **Danger Zone** → **Change visibility** → **Public**.
+
+Packages are private by default; making them public allows unauthenticated pulls (e.g. from AgentBeats).
 
 ## Submission Components
 
