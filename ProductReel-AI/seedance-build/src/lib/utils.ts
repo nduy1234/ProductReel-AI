@@ -166,6 +166,6 @@ export function truncate(text: string, maxLength: number): string {
 export function isDemoMode(): boolean {
   return (
     process.env.DEMO_MODE === "true" ||
-    !process.env.BYTEPLUS_ARK_API_KEY
+    (!process.env.BYTEPLUS_ARK_API_KEY && !process.env.IONROUTER_API_KEY)
   );
 }

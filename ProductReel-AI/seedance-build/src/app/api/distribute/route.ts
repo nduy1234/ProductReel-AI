@@ -16,8 +16,10 @@ import type { DistributeRequest, DistributionPackage } from "@/types";
 import { isDemoMode } from "@/lib/utils";
 import { arkPost } from "@/services/byteplus/client";
 import { mockDistribute } from "@/services/mock/mockService";
+import { hasIonrouterKey, ionPost } from "@/services/ionrouter/client";
 
-const MODEL_ID = process.env.SEED2_MODEL_ID ?? "seed-2-0-lite-260228";
+const MODEL_ID         = process.env.SEED2_MODEL_ID          ?? "seed-2-0-lite-260228";
+const ION_LLM_MODEL_ID = process.env.IONROUTER_LLM_MODEL     ?? "qwen3.5-27b";
 
 // ── Ark chat response ─────────────────────────────────────────
 interface ArkChatResponse {
@@ -29,13 +31,10 @@ interface CaptionJSON {
   hashtags?: string[];
 }
 
-// ── Generate caption via Seed 2.0 ────────────────────────────
-async function generateCaptionWithSeed2(
-  request: DistributeRequest
-): Promise<{ caption: string; hashtags: string[] }> {
+// ── Build the caption prompt ──────────────────────────────────
+function buildCaptionPrompt(request: DistributeRequest): string {
   const { analysis } = request;
-
-  const prompt = `You are a social media content strategist specialising in TikTok, Instagram Reels, and YouTube Shorts.
+  return `You are a social media content strategist specialising in TikTok, Instagram Reels, and YouTube Shorts.
 
 Given this marketing context, write a platform-optimised caption and hashtag set.
 
@@ -48,20 +47,46 @@ Respond with ONLY valid JSON:
   "caption": "2-3 line caption with emojis, CTA at the end (max 150 chars per line)",
   "hashtags": ["#tag1", "#tag2", ...] // 10-12 tags, mix of niche and broad
 }`;
+}
 
-  const response = await arkPost<ArkChatResponse>("/chat/completions", {
-    model: MODEL_ID,
-    messages: [{ role: "user", content: prompt }],
+// ── Generate caption via ionrouter LLM ───────────────────────
+async function generateCaptionWithIonrouter(
+  request: DistributeRequest
+): Promise<{ caption: string; hashtags: string[] }> {
+  const response = await ionPost<ArkChatResponse>("/chat/completions", {
+    model:           ION_LLM_MODEL_ID,
+    messages:        [{ role: "user", content: buildCaptionPrompt(request) }],
     response_format: { type: "json_object" },
-    temperature: 0.7,
-    max_tokens: 512,
+    temperature:     0.7,
+    max_tokens:      512,
   });
 
-  const raw = response.choices[0]?.message?.content ?? "{}";
+  const raw    = response.choices[0]?.message?.content ?? "{}";
   const parsed: CaptionJSON = JSON.parse(raw);
 
   return {
-    caption:  parsed.caption  ?? `${analysis.hooks[0]} ✨\n\n${analysis.script}\n\n🛒 Shop now — link in bio!`,
+    caption:  parsed.caption  ?? `${request.analysis.hooks[0]} ✨\n\n${request.analysis.script}\n\n🛒 Shop now — link in bio!`,
+    hashtags: parsed.hashtags ?? ["#ProductReel", "#VideoAd", "#TikTok"],
+  };
+}
+
+// ── Generate caption via Seed 2.0 ────────────────────────────
+async function generateCaptionWithSeed2(
+  request: DistributeRequest
+): Promise<{ caption: string; hashtags: string[] }> {
+  const response = await arkPost<ArkChatResponse>("/chat/completions", {
+    model:           MODEL_ID,
+    messages:        [{ role: "user", content: buildCaptionPrompt(request) }],
+    response_format: { type: "json_object" },
+    temperature:     0.7,
+    max_tokens:      512,
+  });
+
+  const raw    = response.choices[0]?.message?.content ?? "{}";
+  const parsed: CaptionJSON = JSON.parse(raw);
+
+  return {
+    caption:  parsed.caption  ?? `${request.analysis.hooks[0]} ✨\n\n${request.analysis.script}\n\n🛒 Shop now — link in bio!`,
     hashtags: parsed.hashtags ?? ["#ProductReel", "#VideoAd", "#TikTok"],
   };
 }
@@ -85,10 +110,28 @@ export async function POST(request: NextRequest) {
       const mock = await mockDistribute(body);
       caption  = mock.caption;
       hashtags = mock.hashtags;
+    } else if (hasIonrouterKey()) {
+      try {
+        const generated = await generateCaptionWithIonrouter(body);
+        caption  = generated.caption;
+        hashtags = generated.hashtags;
+      } catch (err) {
+        console.warn("[distribute] ionrouter failed, falling back to mock:", (err as Error).message);
+        const mock = await mockDistribute(body);
+        caption  = mock.caption;
+        hashtags = mock.hashtags;
+      }
     } else {
-      const generated = await generateCaptionWithSeed2(body);
-      caption  = generated.caption;
-      hashtags = generated.hashtags;
+      try {
+        const generated = await generateCaptionWithSeed2(body);
+        caption  = generated.caption;
+        hashtags = generated.hashtags;
+      } catch (err) {
+        console.warn("[distribute] BytePlus failed, falling back to mock:", (err as Error).message);
+        const mock = await mockDistribute(body);
+        caption  = mock.caption;
+        hashtags = mock.hashtags;
+      }
     }
 
     const result: DistributionPackage = {

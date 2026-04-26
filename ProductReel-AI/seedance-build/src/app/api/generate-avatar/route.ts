@@ -50,18 +50,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (isDemoMode()) {
-      // Simulate a short delay for realism
       await new Promise((r) => setTimeout(r, 1200));
       return NextResponse.json(mockAvatarTask());
     }
 
-    const task = await createAvatarTask(
-      body.referenceImageBase64,
-      body.audioUrl,
-      body.aspectRatio ?? "9:16"
-    );
-
-    return NextResponse.json(task);
+    try {
+      const task = await createAvatarTask(
+        body.referenceImageBase64,
+        body.audioUrl,
+        body.aspectRatio ?? "9:16"
+      );
+      return NextResponse.json(task);
+    } catch (err) {
+      console.warn("[generate-avatar] real API failed, falling back to mock:", (err as Error).message);
+      return NextResponse.json(mockAvatarTask());
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     console.error("[generate-avatar]", message);

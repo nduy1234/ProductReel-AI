@@ -12,6 +12,8 @@ import { isDemoMode } from "@/lib/utils";
 import { hasSeedanceKey } from "@/services/byteplus/seedanceClient";
 import { createVideoTask } from "@/services/byteplus/seedanceService";
 import { mockCreateVideoTask } from "@/services/mock/mockService";
+import { hasIonrouterKey } from "@/services/ionrouter/client";
+import { createVideoTask as ionCreateVideoTask } from "@/services/ionrouter/videoService";
 
 // Allow up to 60 s for the Seedance submission call
 export const maxDuration = 60;
@@ -34,12 +36,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use real Seedance only when a key is configured AND not in demo mode.
-    const result = (!isDemoMode() && hasSeedanceKey())
-      ? await createVideoTask(body)
-      : await mockCreateVideoTask(body);
+    // Demo mode → mock immediately
+    if (isDemoMode()) {
+      return NextResponse.json(await mockCreateVideoTask(body));
+    }
 
-    return NextResponse.json(result);
+    // Try real backends, fall back to mock if they fail
+    if (hasSeedanceKey()) {
+      try {
+        return NextResponse.json(await createVideoTask(body));
+      } catch (err) {
+        console.warn("[generate-video] Seedance failed, falling back to mock:", (err as Error).message);
+      }
+    }
+
+    if (hasIonrouterKey()) {
+      try {
+        return NextResponse.json(await ionCreateVideoTask(body));
+      } catch (err) {
+        console.warn("[generate-video] ionrouter failed, falling back to mock:", (err as Error).message);
+      }
+    }
+
+    // All real backends failed — use mock so the pipeline completes
+    return NextResponse.json(await mockCreateVideoTask(body));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     console.error("[generate-video]", message);

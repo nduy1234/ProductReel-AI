@@ -12,6 +12,8 @@ import type { GenerateStoryboardRequest } from "@/types";
 import { isDemoMode } from "@/lib/utils";
 import { generateStoryboard } from "@/services/byteplus/seedreamService";
 import { mockGenerateStoryboard } from "@/services/mock/mockService";
+import { hasIonrouterKey } from "@/services/ionrouter/client";
+import { generateStoryboard as ionGenerateStoryboard } from "@/services/ionrouter/storyboardService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +28,8 @@ export async function POST(request: NextRequest) {
 
     const result = isDemoMode()
       ? await mockGenerateStoryboard(body)
+      : hasIonrouterKey()
+      ? await ionGenerateStoryboard(body)
       : await generateStoryboard(body);
 
     return NextResponse.json(result);

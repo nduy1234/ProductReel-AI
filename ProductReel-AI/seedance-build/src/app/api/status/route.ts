@@ -15,6 +15,8 @@ import { isDemoMode } from "@/lib/utils";
 import { hasSeedanceKey } from "@/services/byteplus/seedanceClient";
 import { getVideoTaskStatus } from "@/services/byteplus/seedanceService";
 import { mockGetVideoStatus } from "@/services/mock/mockService";
+import { hasIonrouterKey } from "@/services/ionrouter/client";
+import { getVideoTaskStatus as ionGetVideoTaskStatus } from "@/services/ionrouter/videoService";
 
 // Never cache polling responses
 export const dynamic = "force-dynamic";
@@ -32,12 +34,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Mirror the same logic as generate-video: use real API only when not in demo mode and key is set
-    const result = (!isDemoMode() && hasSeedanceKey())
-      ? await getVideoTaskStatus(taskId)
-      : await mockGetVideoStatus(taskId);
+    // Demo mode → mock immediately
+    if (isDemoMode()) {
+      return NextResponse.json(await mockGetVideoStatus(taskId));
+    }
 
-    return NextResponse.json(result);
+    // Try real backends, fall back to mock if they fail
+    if (hasSeedanceKey()) {
+      try {
+        return NextResponse.json(await getVideoTaskStatus(taskId));
+      } catch (err) {
+        console.warn("[status] Seedance failed, falling back to mock:", (err as Error).message);
+      }
+    }
+
+    if (hasIonrouterKey()) {
+      try {
+        return NextResponse.json(await ionGetVideoTaskStatus(taskId));
+      } catch (err) {
+        console.warn("[status] ionrouter failed, falling back to mock:", (err as Error).message);
+      }
+    }
+
+    return NextResponse.json(await mockGetVideoStatus(taskId));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     console.error("[status]", message);

@@ -12,6 +12,8 @@ import type { AnalyzeProductRequest } from "@/types";
 import { isDemoMode } from "@/lib/utils";
 import { analyzeProduct } from "@/services/byteplus/seed2Service";
 import { mockAnalyzeProduct } from "@/services/mock/mockService";
+import { hasIonrouterKey } from "@/services/ionrouter/client";
+import { analyzeProduct as ionAnalyzeProduct } from "@/services/ionrouter/analyzeService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,6 +35,8 @@ export async function POST(request: NextRequest) {
 
     const result = isDemoMode()
       ? await mockAnalyzeProduct(body)
+      : hasIonrouterKey()
+      ? await ionAnalyzeProduct(body)
       : await analyzeProduct(body);
 
     return NextResponse.json(result);

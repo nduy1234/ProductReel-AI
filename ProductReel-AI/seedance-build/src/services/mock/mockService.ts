@@ -36,30 +36,24 @@ const WATCH_NAMES = [
   "Sport Steel Chronograph",
 ];
 
-// A real short 9:16 demo video (Pexels free-to-use)
+// Public-domain sample video (no login required)
 const DEMO_VIDEO_URL =
-  "https://www.pexels.com/download/video/3571264/?fps=25.0&h=1920&w=1080";
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
-// A simple audio tone encoded as a tiny base64 WAV
-// (3 second silent WAV for demo — replace with actual audio in prod)
-const DEMO_AUDIO_B64 =
-  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+// Short royalty-free audio clip for demo voiceover preview
+const DEMO_AUDIO_URL =
+  "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3";
 
 // ── Simulated latencies (ms) ──────────────────────────────────
 const LATENCIES = {
   analyze:    800,
   storyboard: 1200,
-  video:      2000,  // Initial POST
+  video:      500,   // Initial POST
   poll:       1000,  // Each poll tick
   voice:      900,
   distribute: 400,
 };
 
-// ── Mock task store ───────────────────────────────────────────
-const videoTaskStore = new Map<
-  string,
-  { createdAt: number; status: "pending" | "running" | "succeeded" }
->();
 
 // ── 1. Analyze Product ────────────────────────────────────────
 export async function mockAnalyzeProduct(
@@ -111,38 +105,31 @@ export async function mockCreateVideoTask(
   _request: GenerateVideoRequest
 ): Promise<VideoTask> {
   await sleep(LATENCIES.video);
-
+  // Embed creation timestamp in the task ID so polling works across HMR reloads
   const taskId = `mock_task_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  videoTaskStore.set(taskId, { createdAt: Date.now(), status: "pending" });
-
   return { taskId, status: "pending" };
 }
 
 // ── 4. Poll Video Task Status ─────────────────────────────────
+// Derives status purely from the timestamp embedded in the task ID,
+// so it survives Next.js HMR hot-reloads (no in-memory state needed).
 export async function mockGetVideoStatus(taskId: string): Promise<VideoTask> {
   await sleep(LATENCIES.poll);
 
-  const task = videoTaskStore.get(taskId);
-  if (!task) {
+  const match = taskId.match(/mock_task_(\d+)/);
+  if (!match) {
     return { taskId, status: "failed", error: "Task not found" };
   }
 
-  const elapsed = Date.now() - task.createdAt;
+  const elapsed = Date.now() - parseInt(match[1]);
 
-  // Simulate: pending → running (after 3s) → succeeded (after 8s)
-  if (elapsed < 3_000) {
-    return { taskId, status: "pending" };
-  }
-  if (elapsed < 8_000) {
-    videoTaskStore.set(taskId, { ...task, status: "running" });
-    return { taskId, status: "running" };
-  }
+  if (elapsed < 1_000) return { taskId, status: "pending" };
+  if (elapsed < 3_000) return { taskId, status: "running" };
 
-  videoTaskStore.set(taskId, { ...task, status: "succeeded" });
   return {
     taskId,
-    status:   "succeeded",
-    videoUrl: DEMO_VIDEO_URL,
+    status:      "succeeded",
+    videoUrl:    DEMO_VIDEO_URL,
     thumbnailUrl: DEMO_IMAGES[0],
   };
 }
@@ -154,9 +141,9 @@ export async function mockGenerateVoice(
   await sleep(LATENCIES.voice);
 
   return {
-    audioUrl:        DEMO_AUDIO_B64,
+    audioUrl:        DEMO_AUDIO_URL,
     durationSeconds: 7,
-    format:          "wav",
+    format:          "mp3",
   };
 }
 

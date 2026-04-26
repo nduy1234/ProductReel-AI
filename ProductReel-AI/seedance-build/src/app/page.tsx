@@ -306,16 +306,6 @@ export default function Home() {
               ProductReel <span className="text-indigo-400">AI</span>
             </span>
           </div>
-          <div className="flex items-center gap-4 text-[11px] text-[#5a5a78]">
-            <span className="hidden sm:flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[#9090b0]">BytePlus Seed</span>
-            </span>
-            <a href="https://docs.byteplus.com/en/docs/ModelArk/1399008" target="_blank" rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1 hover:text-indigo-400 transition-colors">
-              <Info className="w-3.5 h-3.5" /> Get API key
-            </a>
-          </div>
         </div>
       </nav>
 

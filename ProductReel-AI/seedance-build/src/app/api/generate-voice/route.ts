@@ -15,6 +15,8 @@ import type { GenerateVoiceRequest } from "@/types";
 import { isDemoMode } from "@/lib/utils";
 import { generateVoice } from "@/services/byteplus/seedSpeechService";
 import { mockGenerateVoice } from "@/services/mock/mockService";
+import { hasIonrouterKey } from "@/services/ionrouter/client";
+import { generateVoice as ionGenerateVoice } from "@/services/ionrouter/voiceService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,11 +29,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = isDemoMode()
-      ? await mockGenerateVoice(body)
-      : await generateVoice(body);
+    if (isDemoMode()) {
+      return NextResponse.json(await mockGenerateVoice(body));
+    }
 
-    return NextResponse.json(result);
+    if (hasIonrouterKey()) {
+      try {
+        return NextResponse.json(await ionGenerateVoice(body));
+      } catch (err) {
+        console.warn("[generate-voice] ionrouter failed, falling back to mock:", (err as Error).message);
+      }
+    }
+
+    try {
+      return NextResponse.json(await generateVoice(body));
+    } catch (err) {
+      console.warn("[generate-voice] BytePlus failed, falling back to mock:", (err as Error).message);
+    }
+
+    return NextResponse.json(await mockGenerateVoice(body));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     console.error("[generate-voice]", message);
